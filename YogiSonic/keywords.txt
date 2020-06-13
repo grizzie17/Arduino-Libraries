@@ -1,0 +1,21 @@
+###################################
+# Syntax Coloring Map For NewPing
+###################################
+
+###################################
+# Datatypes (KEYWORD1)
+###################################
+
+YogiSonic KEYWORD1
+
+###################################
+# Methods and Functions (KEYWORD2)
+###################################
+
+init KEYWORD2
+getDistanceCm KEYWORD2
+lastDistanceCm KEYWORD2
+
+###################################
+# Constants (LITERAL1)
+###################################
