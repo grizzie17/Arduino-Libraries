@@ -1,0 +1,6 @@
+[submodule "MPU9250"]
+	path = MPU9250
+	url = https://github.com/bolderflight/MPU9250.git
+[submodule "Sleep_n0m1"]
+	path = Sleep_n0m1
+	url = https://github.com/n0m1/Sleep_n0m1.git
