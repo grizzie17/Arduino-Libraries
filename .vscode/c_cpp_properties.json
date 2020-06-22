@@ -22,6 +22,7 @@
                 "${env:SKETCHBOOKS}\\libraries\\**",
                 "${env:SKETCHBOOKS}\\libraries\\**\\**",
                 "${env:SKETCHBOOKS}\\libraries\\YogiDelay\\src",
+                "${env:SKETCHBOOKS}\\libraries\\YogiPitches\\src",
                 "${env:SKETCHBOOKS}\\libraries\\YogiSonic\\src"
             ],
             "forcedInclude": [
@@ -31,6 +32,16 @@
             "cStandard": "c11",
             "cppStandard": "c++11",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:\\Arduino\\tools\\**",
+                "C:\\Arduino\\hardware\\arduino\\avr\\**"
+            ],
+            "forcedInclude": [
+                "C:\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
+            ]
         }
     ],
     "version": 4

@@ -26,6 +26,9 @@ public:
     bool
     peekTime( unsigned long uCurrentTime = 0 );
 
+    static unsigned long
+    getCurrentTime();
+
 protected:
     unsigned long        m_nDelay;
     unsigned long        m_nPreviousTime;

@@ -1,8 +1,7 @@
 #include <YogiDelay.h>
 
 
-YogiDelay     g_tDelay;
-unsigned long g_uTimeCurrent;
+YogiDelay g_tDelay;
 
 
 void
@@ -15,8 +14,7 @@ setup()
 void
 loop()
 {
-    g_uTimeCurrent = millis();
-    if ( m_tDelay.timesUp( g_uTimeCurrent ) )
+    if ( g_tDelay.timesUp() )
     {
         // do something in a timely fashion
     }

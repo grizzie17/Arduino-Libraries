@@ -3,15 +3,17 @@
 
 #include "YogiSonic.h"
 
-#define SONIC_DEBUG_PRINT( s )   Serial.print( s )
-#define SONIC_DEBUG_PRINTLN( s ) Serial.println( s )
-// #define SONIC_DEBUG_PRINT( s )   ( 0 )
-// #define SONIC_DEBUG_PRINTLN( s ) ( 0 )
 
+#if defined( SONIC_DEBUG )
+#    define SONIC_DEBUG_PRINT( s )   Serial.print( s )
+#    define SONIC_DEBUG_PRINTLN( s ) Serial.println( s )
+#else
+#    define SONIC_DEBUG_PRINT( s )   ( 0 )
+#    define SONIC_DEBUG_PRINTLN( s ) ( 0 )
+#endif
 
-#define MAX_SENSOR_DISTANCE 500
-#define MAX_SENSOR_DELAY    5800
-#define NO_ECHO             0
+//#define MAX_SENSOR_DELAY    5800
+//#define NO_ECHO              0L
 
 
 //-----------------------------------------------
@@ -21,7 +23,7 @@ YogiSonic::YogiSonic()
         : m_nPinTrigger( 0 )
         , m_nPinEcho( 0 )
         , m_uTimeout( 20000UL )
-        , m_dLastDistance( 0.0 )
+        , m_nLastDistance( 1 )
         , m_nZeroCount( 0 )
 {}
 
@@ -31,16 +33,16 @@ YogiSonic::~YogiSonic()
 void
 YogiSonic::init( uint8_t nTrigger, uint8_t nEcho, unsigned long uTimeout )
 {
-    m_nPinTrigger = nTrigger;
-    m_nPinEcho = nEcho;
-    m_uTimeout = uTimeout;
-    m_nZeroCount = 0;
+    this->m_nPinTrigger = nTrigger;
+    this->m_nPinEcho = nEcho;
+    this->m_uTimeout = uTimeout;
+    this->m_nZeroCount = 0;
 
-    pinMode( m_nPinTrigger, OUTPUT );
-    pinMode( m_nPinEcho, INPUT );
+    pinMode( this->m_nPinTrigger, OUTPUT );
+    pinMode( this->m_nPinEcho, INPUT );
 }
 
-double
+long
 YogiSonic::getDistanceCm()
 {
     unsigned long uEchoTime = 0;
@@ -55,60 +57,64 @@ YogiSonic::getDistanceCm()
     uEchoTime = pulseIn( m_nPinTrigger, HIGH );
 #else
     unsigned long uPreviousMicros = 0;
-    digitalWrite( m_nPinTrigger, LOW );
+    digitalWrite( this->m_nPinTrigger, LOW );
     delayMicroseconds( 2 );
-    digitalWrite( m_nPinTrigger, HIGH );
+    digitalWrite( this->m_nPinTrigger, HIGH );
     delayMicroseconds( 10 );
-    digitalWrite( m_nPinTrigger, LOW );
+    digitalWrite( this->m_nPinTrigger, LOW );
     // delayMicroseconds( 2 );
     // uEchoTime = pulseIn( m_nPinEcho, HIGH );
     uPreviousMicros = micros();
-    while ( ! digitalRead( m_nPinEcho )
-            && ( micros() - uPreviousMicros ) <= m_uTimeout )
+    while ( ! digitalRead( this->m_nPinEcho )
+            && ( micros() - uPreviousMicros ) <= this->m_uTimeout )
         ;  // wait for echo pin HIGH or m_uTimeout
     uPreviousMicros = micros();
-    while ( digitalRead( m_nPinEcho )
-            && ( micros() - uPreviousMicros ) <= m_uTimeout )
+    while ( digitalRead( this->m_nPinEcho )
+            && ( micros() - uPreviousMicros ) <= this->m_uTimeout )
         ;  // wait for echo pin LOW or timeout
     uEchoTime = micros() - uPreviousMicros;
 
 #endif
-    double dDist = CmFromMicroseconds( uEchoTime );
-    if ( 1.0 <= dDist && dDist < 400.0 )
+    long nDist = cmFromMicroseconds( uEchoTime );
+    if ( 1 < nDist && nDist < MAX_SENSOR_DISTANCE )
     {
-        m_dLastDistance = dDist;
-        return dDist;
+        this->m_nLastDistance = nDist;
+        return nDist;
     }
-    else if ( dDist < 1.0 )
+    else if ( MAX_SENSOR_DISTANCE <= nDist )
     {
-        ++m_nZeroCount;
+        this->m_nLastDistance = MAX_SENSOR_DISTANCE;
+        return MAX_SENSOR_DISTANCE;
+    }
+    else if ( nDist < 1 )
+    {
+        ++this->m_nZeroCount;
         SONIC_DEBUG_PRINT( "[" );
         SONIC_DEBUG_PRINT( m_nZeroCount );
         SONIC_DEBUG_PRINT( "] Sonic dist = " );
-        SONIC_DEBUG_PRINTLN( dDist );
-        return 0;
+        SONIC_DEBUG_PRINTLN( nDist );
+        return this->m_nLastDistance;
     }
     else
     {
-        return m_dLastDistance;
+        return this->m_nLastDistance;
     }
 }
 
-double
-YogiSonic::CmFromMicroseconds( unsigned long duration )
+long
+YogiSonic::cmFromMicroseconds( unsigned long duration )
 {
     // const double kSpeedOfSound
     // 		= 0.03313 + 0.0000606 * 19.307;  // Cair
     // (331.3 + 0.606 * temperature) double dDist =
     // double( duration ) / 4.0 * kSpeedOfSound; return
     // dDist;
-    double d = double( duration ) / DIVISOR_CM / 2;
     // d = static_cast<double>( duration )* d = double( duration ) * 340.0 / 20000;
-    return d;
+    return duration / DIVISOR_CM / 2;
 }
 
-double
+long
 YogiSonic::lastDistanceCm()
 {
-    return m_dLastDistance;
+    return this->m_nLastDistance;
 }

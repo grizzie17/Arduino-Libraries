@@ -21,6 +21,7 @@ YogiDelay::init( unsigned long nMilliSeconds )
 {
     m_nDelay = nMilliSeconds;
     m_nPreviousTime = 0;
+    m_nCurrentTime = millis();
 }
 
 void
@@ -29,10 +30,12 @@ YogiDelay::newDelay( unsigned long nMilliSeconds )
     m_nDelay = nMilliSeconds;
 }
 
+
 void
 YogiDelay::reset()
 {
     m_nPreviousTime = 0;
+    m_nCurrentTime = millis();
 }
 
 bool
@@ -71,4 +74,12 @@ YogiDelay::peekTime( unsigned long nCurrentTime )
     {
         return false;
     }
+}
+
+
+// static
+unsigned long
+YogiDelay::getCurrentTime()
+{
+    return m_nCurrentTime;
 }
