@@ -4,3 +4,6 @@
 [submodule "Sleep_n0m1"]
 	path = Sleep_n0m1
 	url = https://github.com/n0m1/Sleep_n0m1.git
+[submodule "SparkFun_ADXL345_Arduino_Library"]
+	path = SparkFun_ADXL345_Arduino_Library
+	url = https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library.git
