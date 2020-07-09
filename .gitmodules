@@ -7,3 +7,6 @@
 [submodule "SparkFun_ADXL345_Arduino_Library"]
 	path = SparkFun_ADXL345_Arduino_Library
 	url = https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library.git
+[submodule "Adafruit_ADXL345"]
+	path = Adafruit_ADXL345
+	url = https://github.com/adafruit/Adafruit_ADXL345.git
