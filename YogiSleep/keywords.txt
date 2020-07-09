@@ -1,0 +1,24 @@
+###################################
+# Syntax Coloring Map For NewPing
+###################################
+
+###################################
+# Datatypes (KEYWORD1)
+###################################
+
+YogiSleep KEYWORD1
+
+###################################
+# Methods and Functions (KEYWORD2)
+###################################
+
+powerDown KEYWORD2
+savePinModes KEYWORD2
+restorePinModes KEYWORD2
+setPinModesOutput KEYWORD2
+getPinMode KEYWORD2
+printPinModes KEYWORD2
+
+###################################
+# Constants (LITERAL1)
+###################################
