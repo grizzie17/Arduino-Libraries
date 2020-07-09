@@ -13,12 +13,15 @@
 class YogiSonic
 {
 public:
-    YogiSonic();
-    ~YogiSonic();
+    YogiSonic( uint8_t nTrigger, uint8_t nEcho,
+            unsigned long uTimeout = 200000UL );
 
 public:
     void
-    init( uint8_t nTrigger, uint8_t nEcho, unsigned long uTimeout = 20000UL );
+    init();
+
+    void
+    setMaxDistance( unsigned nCM );
 
     long
     getDistanceCm();
@@ -33,6 +36,8 @@ protected:
     uint8_t       m_nPinTrigger;
     uint8_t       m_nPinEcho;
     unsigned long m_uTimeout;
+    unsigned long m_uMaxDistance;
+    unsigned long m_uMaxDuration;
     long          m_nLastDistance;
     int           m_nZeroCount;
 
