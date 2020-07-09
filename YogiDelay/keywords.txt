@@ -17,6 +17,7 @@ newDelay KEYWORD2
 reset KEYWORD2
 timesUp KEYWORD2
 peekTime KEYWORD2
+getCurrentTime KEYWORD2
 
 ###################################
 # Constants (LITERAL1)
