@@ -1,0 +1,31 @@
+###################################
+# Syntax Coloring Map For NewPing
+###################################
+
+###################################
+# Datatypes (KEYWORD1)
+###################################
+
+#Yogi_ADXL345 KEYWORD1
+ADXL345_setup KEYWORD1
+
+###################################
+# Methods and Functions (KEYWORD2)
+###################################
+
+#init KEYWORD2
+#newDelay KEYWORD2
+#reset KEYWORD2
+#timesUp KEYWORD2
+#peekTime KEYWORD2
+
+adxlStatus KEYWORD2
+adxlSetup KEYWORD2
+adxlGetInterrupts KEYWORD2
+adxlPrintXYZ KEYWORD2
+adxlDataHandler KEYWORD2
+adxlIntHandler KEYWORD2
+
+###################################
+# Constants (LITERAL1)
+###################################

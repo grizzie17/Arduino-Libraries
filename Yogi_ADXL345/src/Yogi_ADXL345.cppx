@@ -1,0 +1,414 @@
+#include <Arduino.h>
+#include <SPI.h>
+#include <Wire.h>
+
+
+#include "Yogi_ADXL345.h"
+
+
+ADXL345::ADXL345()
+        : m_bI2C( false )
+        , m_nDevID( 0 )
+        , m_CS( 10 )
+{
+    loadGains();
+}
+
+
+int
+ADXL345::readAccel( int* xyz )
+{
+    return readAccel( xyz, xyz + 1, xyz + 2 );
+}
+
+
+int
+ADXL345::readAccel( int* x, int* y, int* z )
+{
+    int status = readFrom( ADXL345_DATAX0, sizeof( m_buff ), m_buff );
+    if ( 0 <= status )
+    {
+        *x = intFromByteBuffer( m_buff );
+        *y = intFromByteBuffer( m_buff + 2 );
+        *z = intFromByteBuffer( m_buff + 4 );
+    }
+    return status;
+}
+
+
+int
+ADXL345::configureI2C( byte nDevID )
+{
+    m_nDevID = nDevID;
+    m_bI2C = true;
+
+    Wire.begin();
+
+    writeTo( ADXL345_FIFO_CTL, FIFO_MODE_BYPASS );
+    writeTo( ADXL345_POWER_CTL, 0 );
+    writeTo( ADXL345_POWER_CTL, POWER_CTL_AUTO_SLEEP );
+    setRegisterMask( ADXL345_DATA_FORMAT, DATA_FORMAT_INT_INVERT, 0 );
+
+    setRange( 2 );
+    setActivityThreshold( 64 );
+    setInactivityThreshold( 64 );
+
+    return setRegisterMask(
+            ADXL345_POWER_CTL, POWER_CTL_WAKEUP, POWER_CTL_WAKEUP_1HZ );
+}
+
+
+int
+ADXL345::configureSPI( byte uCS )
+{
+    m_CS = uCS;
+    m_nDevID = 0;
+    m_bI2C = false;
+
+    SPI.begin();
+    SPI.setDataMode( SPI_MODE3 );
+    pinMode( m_CS, OUTPUT );
+    digitalWrite( m_CS, HIGH );
+
+    return setRegisterMask(
+            ADXL345_POWER_CTL, POWER_CTL_WAKEUP, POWER_CTL_WAKEUP_1HZ );
+}
+
+
+int
+ADXL345::endConfigure()
+{
+    return setRegisterMask(
+            ADXL345_POWER_CTL, POWER_CTL_MEASURE, POWER_CTL_MEASURE );
+}
+
+
+int
+ADXL345::setRange( int nRange )
+{
+    byte s;
+    byte b;
+
+    switch ( nRange )
+    {
+    case 2:
+        s = DATA_RANGE_2G;
+        break;
+    case 4:
+        s = DATA_RANGE_4G;
+        break;
+    case 8:
+        s = DATA_RANGE_8G;
+        break;
+    case 16:
+        s = DATA_RANGE_16G;
+        break;
+    default:
+        s = DATA_RANGE_2G;
+        break;
+    }
+    setRegisterMask( ADXL345_DATA_FORMAT, DATA_FORMAT_RANGE, s );
+}
+
+
+int
+ADXL345::setInterrupts( byte mask )
+{
+    return writeTo( ADXL345_INT_ENABLE, mask );
+}
+
+int
+ADXL345::setInterruptMap( byte mask )
+{
+    return writeTo( ADXL345_INT_MAP, mask );
+}
+
+byte
+ADXL345::getInterruptSource()
+{
+    byte b;
+    readFrom( ADXL345_INT_SOURCE, 1, &b );
+    return b;
+}
+
+int
+ADXL345::setActivityX( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, ACT_CTL_X, state ? ACT_CTL_X : 0 );
+}
+
+int
+ADXL345::setActivityY( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, ACT_CTL_Y, state ? ACT_CTL_Y : 0 );
+}
+
+int
+ADXL345::setActivityZ( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, ACT_CTL_Z, state ? ACT_CTL_Z : 0 );
+}
+
+int
+ADXL345::setActivityXYZ( bool xState, bool yState, bool zState )
+{
+    setActivityX( xState );
+    setActivityY( yState );
+    setActivityZ( zState );
+}
+
+int
+ADXL345::setActivityAc( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, ACT_CTL_AC, state ? ACT_CTL_AC : 0 );
+}
+
+int
+ADXL345::setActivityThreshold( int nThreshold )
+{
+    nThreshold = constrain( nThreshold, 0, 255 );
+    byte b = byte( nThreshold );
+    return writeTo( ADXL345_THRESH_ACT, b );
+}
+
+
+int
+ADXL345::setInactivityX( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, INACT_CTL_X, state ? INACT_CTL_X : 0 );
+}
+
+int
+ADXL345::setInactivityY( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, INACT_CTL_Y, state ? INACT_CTL_Y : 0 );
+}
+
+int
+ADXL345::setInactivityZ( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, INACT_CTL_Z, state ? INACT_CTL_Z : 0 );
+}
+
+int
+ADXL345::setInactivityXYZ( bool xState, bool yState, bool zState )
+{
+    setInactivityX( xState );
+    setInactivityY( yState );
+    setInactivityZ( zState );
+}
+
+int
+ADXL345::setInactivityAc( bool state )
+{
+    return setRegisterMask(
+            ADXL345_ACT_INACT_CTL, INACT_CTL_AC, state ? INACT_CTL_AC : 0 );
+}
+
+int
+ADXL345::setInactivityThreshold( int nThreshold )
+{
+    nThreshold = constrain( nThreshold, 0, 255 );
+    byte b = byte( nThreshold );
+    return writeTo( ADXL345_THRESH_INACT, b );
+}
+
+
+void
+ADXL345::printAllRegisters()
+{
+    byte _b;
+    Serial.print( "0x00: " );
+    readFrom( 0x00, 1, &_b );
+    printByte( _b );
+    Serial.println( "" );
+    int i;
+    for ( i = 29; i <= 57; i++ )
+    {
+        Serial.print( "0x" );
+        Serial.print( i, HEX );
+        Serial.print( ": " );
+        readFrom( i, 1, &_b );
+        printByte( _b );
+        Serial.println( "" );
+    }
+}
+
+void
+ADXL345::printByte( byte val )
+{
+    Serial.print( "B" );
+    for ( int i = 7; 0 <= i; --i )
+        Serial.print( val >> i & 1, BIN );
+}
+
+
+// Protected Functions ================
+
+
+void
+ADXL345::loadGains()
+{
+    m_aGains[0] = 0.0376390;  // Original gain 0.00376390
+    m_aGains[1] = 0.0376009;  // Original gain 0.00376009
+    m_aGains[2] = 0.0349265;  // Original gain 0.00349265
+}
+
+
+int
+ADXL345::writeTo( byte address, byte value )
+{
+    if ( m_bI2C )
+        return writeToI2C( address, value );
+    else
+        return writeToSPI( address, value );
+}
+
+int
+ADXL345::readFrom( byte address, int num, byte buff[] )
+{
+    if ( m_bI2C )
+        return readFromI2C( address, num, buff );
+    else
+        return readFromSPI( address, num, buff );
+}
+
+int
+ADXL345::statusFromI2C( byte value )
+{
+    switch ( value )
+    {
+    case 0:  // success
+        return STATUS_NO_ERROR;
+    case 1:  // length to long for buffer
+        return STATUS_TOO_LONG;
+    case 2:  // address send, NACK received
+        return STATUS_ADDR_SEND;
+    case 3:  // data send, NACK received
+        return STATUS_VALUE_SEND;
+    case 4:  // other twi error
+        return STATUS_TWI_ERROR;
+    default:
+        return STATUS_ERROR;
+    }
+}
+//  * Output   1 length too long for buffer
+//  *          2 not slave transmitter
+//  *          0 ok
+
+int
+ADXL345::writeToI2C( byte address, byte value )
+{
+    byte sts;
+    Wire.beginTransmission( m_nDevID );
+    Wire.write( address );
+    Wire.write( value );
+    sts = Wire.endTransmission();
+
+    return statusFromI2C( sts );
+}
+
+
+int
+ADXL345::readFromI2C( byte address, int num, byte buffer[] )
+{
+    Wire.beginTransmission( m_nDevID );
+    Wire.write( address );
+    Wire.endTransmission();
+
+    Wire.requestFrom( (int)m_nDevID, num );
+
+    int i = 0;
+    while ( Wire.available() )
+    {
+        if ( i < num )
+        {
+            buffer[i] = Wire.read();
+            ++i;
+        }
+        else
+        {
+            return STATUS_READ_ERROR;
+        }
+    }
+    return STATUS_NO_ERROR;
+}
+
+
+//
+int
+ADXL345::writeToSPI( byte address, byte value )
+{
+    digitalWrite( m_CS, LOW );
+    SPI.transfer( address );
+    SPI.transfer( value );
+    digitalWrite( m_CS, HIGH );
+
+    return STATUS_NO_ERROR;
+}
+
+
+int
+ADXL345::readFromSPI( byte address, int num, byte buffer[] )
+{
+    byte regAddr = 0x80 | address;
+    if ( 1 < num )
+        regAddr |= 0x40;
+
+    digitalWrite( m_CS, LOW );
+    SPI.transfer( regAddr );
+    for ( int i = 0; i < num; ++i )
+    {
+        buffer[i] = SPI.transfer( 0x00 );
+    }
+    digitalWrite( m_CS, HIGH );
+
+    return STATUS_NO_ERROR;
+}
+
+
+int
+ADXL345::intFromByteBuffer( byte* buff )
+{
+    return (int)( ( (int)( *( buff + 1 ) ) << 8 ) | *buff );
+}
+
+
+int
+ADXL345::setRegisterBit( byte regAddr, int bitPos, bool state )
+{
+    byte b;
+    readFrom( regAddr, 1, &b );
+    if ( state )
+        b |= 1 << bitPos;  // change only the one bit
+    else
+        b &= ~( 1 << bitPos );
+    return writeTo( regAddr, b );
+}
+
+
+bool
+ADXL345::getRegisterBit( byte regAddr, int bitPos )
+{
+    byte b;
+    readFrom( regAddr, 1, &b );
+    return ( ( b >> bitPos ) & 1 );
+}
+
+
+int
+ADXL345::setRegisterMask( byte regAddr, byte mask, byte value )
+{
+    byte b;
+    readFrom( regAddr, 1, &b );
+    b &= ~mask;         // clear previous value
+    b |= value & mask;  // set new value
+    return writeTo( regAddr, b );
+}
