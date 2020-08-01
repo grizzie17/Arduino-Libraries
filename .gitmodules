@@ -10,3 +10,12 @@
 [submodule "Adafruit_ADXL345"]
 	path = Adafruit_ADXL345
 	url = https://github.com/adafruit/Adafruit_ADXL345.git
+[submodule "rocketscream_LowPower"]
+	path = rocketscream_LowPower
+	url = https://github.com/rocketscream/Low-Power.git
+[submodule "WatchDog"]
+	path = WatchDog
+	url = https://github.com/nadavmatalon/WatchDog.git
+[submodule "avr_debug"]
+	path = avr_debug
+	url = https://github.com/jdolinay/avr_debug.git
