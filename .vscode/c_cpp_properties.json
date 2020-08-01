@@ -6,10 +6,12 @@
     },
     "configurations": [
         {
-            "name": "Arduino",
+            "name": "Win32",
             "defines": [
                 "ARDUINO=10800",
-                "USBCON"
+                "USBCON",
+                "__AVR__",
+                "_DEBUG"
             ],
             "includePath": [
                 ".",
@@ -22,11 +24,14 @@
                 "C:\\Arduino\\libraries\\**",
                 "C:\\Arduino\\libraries\\**\\**\\**",
                 "${env:ARDUINOLIBS}\\SPI\\src",
+                "${env:SKETCHLIBS}\\YogiHeaders",
+                "${env:SKETCHLIBS}\\SparkFun_ADXL345_Arduino_Library\\src",
                 "${env:SKETCHLIBS}\\YogiDelay\\src",
                 "${env:SKETCHLIBS}\\YogiPitches\\src",
                 "${env:SKETCHLIBS}\\YogiSonic\\src",
                 "${env:SKETCHLIBS}\\YogiSleep\\src",
-                "${env:SKETCHLIBS}\\Yogi_ADXL345\\src"
+                "${env:SKETCHLIBS}\\Yogi_ADXL345\\src",
+                "${env:SKETCHLIBS}\\rocketscream_LowPower"
             ],
             "forcedInclude": [
                 "C:\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
@@ -35,16 +40,6 @@
             "cStandard": "c11",
             "cppStandard": "c++11",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe"
-        },
-        {
-            "name": "Win32",
-            "includePath": [
-                "C:\\Arduino\\tools\\**",
-                "C:\\Arduino\\hardware\\arduino\\avr\\**"
-            ],
-            "forcedInclude": [
-                "C:\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
-            ]
         }
     ],
     "version": 4
