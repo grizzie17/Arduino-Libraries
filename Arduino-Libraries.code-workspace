@@ -23,5 +23,9 @@
 		"editor.formatOnSave": true,
 		"editor.formatOnType": true,
 		"editor.formatOnPaste": true,
+		// github
+		"githubPullRequests.remotes": [
+			"origin"
+		]
 	}
 }
