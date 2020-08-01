@@ -46,24 +46,68 @@
 #define ADCSRA_M_ADEN 0b10000000  // ADC enable
 
 
+volatile bool    YogiSleep::m_bYogiInterrupt = false;
+volatile uint8_t YogiSleep::m_uYogiIntValue = LOW;
+uint8_t          YogiSleep::m_pinINT = 2;
+
+
 // class lifecycle ====================
 
 YogiSleep::YogiSleep()
 {
-    for ( uint8_t i = 0; i < PIN_MAX; ++i )
-        m_aModes[i] = PIN_UNKNOWN;
+    m_bYogiInterrupt = false;
+    for ( uint8_t i = PIN_MIN; i <= PIN_MAX; ++i )
+    {
+        m_aModes[i].mode = PIN_UNKNOWN;
+        m_aModes[i].value = 0;
+    }
 }
 
 // public functions ===================
 
 
 void
-YogiSleep::powerDown()
+YogiSleep::setup( uint8_t pinInterrupt )
+{
+    m_bYogiInterrupt = false;
+    m_uYogiIntValue = LOW;
+    m_pinINT = pinInterrupt;
+    attachInterrupt(
+            digitalPinToInterrupt( m_pinINT ), YogiSleepInterrupt, RISING );
+}
+
+
+bool
+YogiSleep::getInterrupt()
+{
+    bool bINT = m_bYogiInterrupt;
+    m_bYogiInterrupt = false;
+    return bINT;
+}
+
+
+uint8_t
+YogiSleep::getIntValue()
+{
+    uint8_t v = m_uYogiIntValue;
+    m_uYogiIntValue = LOW;
+    return v;
+}
+
+
+void
+YogiSleep::prepareSleep()
 {
     savePinModes();
+    setPinModesOutput();
+}
 
+
+void
+YogiSleep::sleep()
+{
     uint8_t saveADC = ADCSRA & ADCSRA_M_ADEN;
-    uint8_t saveSMCR_PD = SMCR & ( SMCR_V_POWER_DOWN << SMCR_B_SM210 );
+    uint8_t saveSMCR_PD = SMCR & ( SMCR_V_ALLBITS << SMCR_B_SM210 );
     uint8_t saveSMCR_SE = SMCR & SMCR_M_SE;
     uint8_t saveMCUCR_BOD = MCUCR & ( MCUCR_M_BODS | MCUCR_M_BODSE );
 
@@ -79,25 +123,40 @@ YogiSleep::powerDown()
     __asm__ __volatile__( "sleep" );
 
     // we wake up here
-    if ( saveADC )
-        ADCSRA |= ADCSRA_M_ADEN;
-    if ( saveSMCR_PD )
-        SMCR = ( SMCR & ~( SMCR_V_ALLBITS << SMCR_B_SM210 ) ) | saveSMCR_PD;
-    if ( saveSMCR_SE )
-        SMCR = ( SMCR & ~SMCR_M_SE ) | saveSMCR_SE;
-    if ( saveMCUCR_BOD )
-        MCUCR = ( MCUCR & ( MCUCR_M_BODS | MCUCR_M_BODSE ) ) | saveMCUCR_BOD;
+
+    // restore modified registers
+    MCUCR = ( MCUCR & ~( MCUCR_M_BODS | MCUCR_M_BODSE ) ) | saveMCUCR_BOD;
+    SMCR = ( SMCR & ~SMCR_M_SE ) | saveSMCR_SE;
+    SMCR = ( SMCR & ~( SMCR_V_ALLBITS << SMCR_B_SM210 ) ) | saveSMCR_PD;
+    ADCSRA = ( ADCSRA & ~ADCSRA_M_ADEN ) | saveADC;
+}
 
 
+void
+YogiSleep::postSleep()
+{
     restorePinModes();
+}
+
+
+void
+YogiSleep::powerDown()
+{
+    prepareSleep();
+    sleep();
+    postSleep();
 }
 
 
 void
 YogiSleep::savePinModes()
 {
-    for ( uint8_t i = 0; i < PIN_MAX; ++i )
-        m_aModes[i] = getPinMode( i );
+    for ( uint8_t i = PIN_MIN; i <= PIN_MAX; ++i )
+    {
+        uint8_t m = getPinMode( i );
+        m_aModes[i].mode = m;
+        m_aModes[i].value = m == OUTPUT ? digitalRead( i ) : 0;
+    }
 }
 
 
@@ -105,11 +164,16 @@ void
 YogiSleep::restorePinModes()
 {
     uint8_t uMode = PIN_UNKNOWN;
-    for ( uint8_t i = 0; i < PIN_MAX; ++i )
+    uint8_t uValue = 0;
+    for ( uint8_t i = PIN_MIN; i <= PIN_MAX; ++i )
     {
-        uMode = m_aModes[i];
+        uMode = m_aModes[i].mode;
         if ( PIN_UNKNOWN != uMode )
+        {
             pinMode( i, uMode );
+            if ( OUTPUT == uMode )
+                digitalWrite( i, m_aModes[i].value );
+        }
     }
 }
 
@@ -117,9 +181,10 @@ YogiSleep::restorePinModes()
 void
 YogiSleep::setPinModesOutput()
 {
-    for ( uint8_t i = 0; i < PIN_MAX; ++i )
+    for ( uint8_t i = PIN_MIN; i <= PIN_MAX; ++i )
     {
         pinMode( i, OUTPUT );
+        digitalWrite( i, LOW );
     }
 }
 
@@ -158,9 +223,9 @@ YogiSleep::getPinMode( uint8_t pin )
 void
 YogiSleep::printPinModes()
 {
-    for ( uint8_t i = 0; i < PIN_MAX; ++i )
+    for ( uint8_t i = PIN_MIN; i <= PIN_MAX; ++i )
     {
-        uint8_t uMode = m_aModes[i];
+        uint8_t uMode = m_aModes[i].mode;
         Serial.print( i );
         Serial.print( ": " );
         switch ( uMode )
@@ -183,3 +248,11 @@ YogiSleep::printPinModes()
 }
 
 // protected functions ================
+
+
+void
+YogiSleep::YogiSleepInterrupt()
+{
+    m_bYogiInterrupt = true;
+    m_uYogiIntValue = digitalRead( m_pinINT );
+}
