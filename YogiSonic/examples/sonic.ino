@@ -3,20 +3,20 @@
 #include <YogiSonic.h>
 
 
-const uint8_t kPinTrigger = 7;
-const uint8_t kPinEcho = 6;
+const uint8_t kPinTrigger = 9;
+const uint8_t kPinEcho = 9;
 
 
-YogiSonic g_tSonic;
+YogiSonic g_tSonic( kPinTrigger, kPinEcho );
 YogiDelay g_tDelay;
 
 
 void
 setup()
 {
-    Serial.begin( 9600 );
+    Serial.begin( 115200 );
     g_tDelay.init( 1000 / 5 );  // divisor is hz value
-    g_tSonic.init( kPinTrigger, kPinEcho );
+    g_tSonic.init();
 }
 
 

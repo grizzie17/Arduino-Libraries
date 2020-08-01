@@ -1,7 +1,12 @@
 #include <Arduino.h>
 
 
+//#define SONIC_DEBUG 1
+
+
 #include "YogiSonic.h"
+
+//
 
 
 #if defined( SONIC_DEBUG )
@@ -27,7 +32,10 @@ YogiSonic::YogiSonic( uint8_t nTrigger, uint8_t nEcho, unsigned long uTimeout )
         , m_uMaxDuration( 0 )
         , m_nLastDistance( 1 )
         , m_nZeroCount( 0 )
-{}
+{
+    if ( 0 == m_uTimeout )
+        m_uTimeout = MAX_SENSOR_DURATION;
+}
 
 
 void
@@ -44,7 +52,9 @@ void
 YogiSonic::setMaxDistance( unsigned nCM )
 {
     this->m_uMaxDistance = nCM;
-    this->m_uMaxDuration = nCM * DIVISOR_CM * 2;
+    this->m_uMaxDuration = nCM * 2 * DIVISOR_CM;
+    // Serial.print( "max duration = " );
+    // Serial.println( m_uMaxDuration );
 }
 
 
@@ -62,51 +72,47 @@ YogiSonic::getDistanceCm()
     pinMode( m_nPinTrigger, INPUT );
     uEchoTime = pulseIn( m_nPinTrigger, HIGH );
 #else
+    unsigned long uMaxDuration
+            = 0 < m_uMaxDuration ? m_uMaxDuration : m_uTimeout;
+    long uMaxDistance
+            = 0 < m_uMaxDistance ? m_uMaxDistance : MAX_SENSOR_DISTANCE;
     unsigned long uPreviousMicros = 0;
+
+    pinMode( m_nPinTrigger, OUTPUT );
     digitalWrite( this->m_nPinTrigger, LOW );
     delayMicroseconds( 2 );
     digitalWrite( this->m_nPinTrigger, HIGH );
     delayMicroseconds( 10 );
     digitalWrite( this->m_nPinTrigger, LOW );
+    pinMode( m_nPinEcho, INPUT );
 #    if false
     delayMicroseconds( 2 );
     uEchoTime = pulseIn( m_nPinEcho, HIGH );
 #    else
     uPreviousMicros = micros();
     while ( ! digitalRead( this->m_nPinEcho )
-            && ( micros() - uPreviousMicros ) <= this->m_uTimeout )
+            && ( micros() - uPreviousMicros ) <= m_uTimeout )
         ;  // wait for echo pin HIGH or m_uTimeout
     uPreviousMicros = micros();
     while ( digitalRead( this->m_nPinEcho )
-            && ( micros() - uPreviousMicros ) <= this->m_uTimeout )
+            && ( micros() - uPreviousMicros ) <= m_uTimeout )
         ;  // wait for echo pin LOW or timeout
     uEchoTime = micros() - uPreviousMicros;
+    // Serial.print( "echo time = " );
+    // Serial.println( uEchoTime );
 #    endif
 
 #endif
     long nDist = cmFromMicroseconds( uEchoTime );
-    if ( nDist < MAX_SENSOR_DISTANCE )
+    if ( nDist <= uMaxDistance )
     {
         this->m_nLastDistance = nDist;
         return nDist;
     }
-    else if ( MAX_SENSOR_DISTANCE <= nDist )
-    {
-        this->m_nLastDistance = MAX_SENSOR_DISTANCE;
-        return MAX_SENSOR_DISTANCE;
-    }
-    else if ( nDist < 1 )
-    {
-        ++this->m_nZeroCount;
-        SONIC_DEBUG_PRINT( "[" );
-        SONIC_DEBUG_PRINT( m_nZeroCount );
-        SONIC_DEBUG_PRINT( "] Sonic dist = " );
-        SONIC_DEBUG_PRINTLN( nDist );
-        return 1;
-    }
     else
     {
-        return this->m_nLastDistance;
+        this->m_nLastDistance = 0;
+        return 0;
     }
 }
 
@@ -119,8 +125,9 @@ YogiSonic::cmFromMicroseconds( unsigned long duration )
     // double( duration ) / 4.0 * kSpeedOfSound; return
     // dDist;
     // d = static_cast<double>( duration )* d = double( duration ) * 340.0 / 20000;
-    if ( 0 == m_uMaxDuration || duration < m_uMaxDuration )
-        return duration / DIVISOR_CM / 2;
+    if ( ( 0 < m_uMaxDuration && duration <= m_uMaxDuration )
+            || 0 == m_uMaxDuration || duration <= MAX_SENSOR_DURATION )
+        return ( duration / 2 ) / DIVISOR_CM;
     else
         return 0;
 }

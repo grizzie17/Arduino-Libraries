@@ -2,8 +2,8 @@
 /// @file: YogiSonic.h
 //===============================================
 
-#ifndef H_YOGISONIC
-#define H_YOGISONIC
+#ifndef YogiSonic_h
+#define YogiSonic_h
 #pragma once
 
 
@@ -13,19 +13,23 @@
 class YogiSonic
 {
 public:
-    YogiSonic( uint8_t nTrigger, uint8_t nEcho,
-            unsigned long uTimeout = 200000UL );
+    // construct with trigger and echo
+    YogiSonic( uint8_t nTrigger, uint8_t nEcho, unsigned long uTimeout = 0 );
 
 public:
+    // initialize
     void
     init();
 
+    // distance maximum cm
     void
     setMaxDistance( unsigned nCM );
 
+    // retrieve the current distance cm
     long
     getDistanceCm();
 
+    // previous distance
     long
     lastDistanceCm();
 
@@ -41,11 +45,12 @@ protected:
     long          m_nLastDistance;
     int           m_nZeroCount;
 
-    const int US_ROUNDTRIP_CM = 57;
-    const int DIVISOR_CM = 28;
-    const int DIVISOR_IN = 71;
-    const int MAX_SENSOR_DISTANCE = 500;
+    const int  US_ROUNDTRIP_CM = 58;
+    const int  DIVISOR_CM = 29.4;
+    const int  DIVISOR_IN = 71;
+    const long MAX_SENSOR_DISTANCE = 400;  // cm
+    const long MAX_SENSOR_DURATION = MAX_SENSOR_DISTANCE * 2 * DIVISOR_CM;
 };
 
 
-#endif  // H_YOGISONIC
+#endif
