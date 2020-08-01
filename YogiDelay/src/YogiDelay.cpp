@@ -28,6 +28,14 @@ void
 YogiDelay::newDelay( unsigned long nMilliSeconds )
 {
     m_nDelay = nMilliSeconds;
+    m_nPreviousTime = millis();
+}
+
+
+unsigned long
+YogiDelay::getDelay()
+{
+    return m_nDelay;
 }
 
 

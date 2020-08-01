@@ -1,6 +1,6 @@
 
-#ifndef H_YOGIDELAY
-#define H_YOGIDELAY
+#ifndef YogiDelay_h
+#define YogiDelay_h
 
 
 class YogiDelay
@@ -15,6 +15,9 @@ public:
 
     void
     newDelay( unsigned long nMilliSeconds );
+
+    unsigned long
+    getDelay();
 
     void
     reset();
@@ -36,4 +39,4 @@ protected:
 };
 
 
-#endif  // H_YOGIDELAY
+#endif
