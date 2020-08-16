@@ -2,6 +2,7 @@
     "env": {
         "SKETCHBOOKS": "C:\\Users\\johng\\LocalDocuments\\Development\\Arduino-Sketchbooks",
         "SKETCHLIBS": "${env:SKETCHBOOKS}\\libraries",
+        "YOGILIBS": "${env:SKETCHLIBS}",
         "ARDUINOLIBS": "C:\\Arduino\\hardware\\arduino\\avr\\libraries"
     },
     "configurations": [
@@ -24,14 +25,16 @@
                 "C:\\Arduino\\libraries\\**",
                 "C:\\Arduino\\libraries\\**\\**\\**",
                 "${env:ARDUINOLIBS}\\SPI\\src",
-                "${env:SKETCHLIBS}\\YogiHeaders",
+                "${env:YOGILIBS}\\YogiUtilities\\src",
+                "${env:YOGILIBS}\\YogiDelay\\src",
+                "${env:YOGILIBS}\\YogiGPS\\src",
+                "${env:YOGILIBS}\\YogiPitches\\src",
+                "${env:YOGILIBS}\\YogiSonic\\src",
+                "${env:YOGILIBS}\\YogiSleep\\src",
+                "${env:YOGILIBS}\\Yogi_ADXL345\\src",
+                "${env:SKETCHLIBS}\\rocketscream_LowPower",
                 "${env:SKETCHLIBS}\\SparkFun_ADXL345_Arduino_Library\\src",
-                "${env:SKETCHLIBS}\\YogiDelay\\src",
-                "${env:SKETCHLIBS}\\YogiPitches\\src",
-                "${env:SKETCHLIBS}\\YogiSonic\\src",
-                "${env:SKETCHLIBS}\\YogiSleep\\src",
-                "${env:SKETCHLIBS}\\Yogi_ADXL345\\src",
-                "${env:SKETCHLIBS}\\rocketscream_LowPower"
+                "${env:SKETCHLIBS}\\Adafruit_GPS\\src"
             ],
             "forcedInclude": [
                 "C:\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
