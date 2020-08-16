@@ -19,3 +19,6 @@
 [submodule "avr_debug"]
 	path = avr_debug
 	url = https://github.com/jdolinay/avr_debug.git
+[submodule "Adafruit_GPS"]
+	path = Adafruit_GPS
+	url = https://github.com/adafruit/Adafruit_GPS.git
