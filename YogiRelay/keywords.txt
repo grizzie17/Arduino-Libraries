@@ -1,0 +1,23 @@
+###################################
+# Syntax Coloring Map For NewPing
+###################################
+
+###################################
+# Datatypes (KEYWORD1)
+###################################
+
+YogiRelay KEYWORD1
+
+###################################
+# Methods and Functions (KEYWORD2)
+###################################
+
+init KEYWORD2
+set KEYWORD2
+reset KEYWORD2
+isSet KEYWORD2
+isOn KEYWORD2
+
+###################################
+# Constants (LITERAL1)
+###################################
