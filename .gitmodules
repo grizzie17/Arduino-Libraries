@@ -22,3 +22,6 @@
 [submodule "Adafruit_GPS"]
 	path = Adafruit_GPS
 	url = https://github.com/adafruit/Adafruit_GPS.git
+[submodule "Adafruit_MPU6050"]
+	path = Adafruit_MPU6050
+	url = https://github.com/adafruit/Adafruit_MPU6050.git
