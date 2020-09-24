@@ -31,3 +31,6 @@
 [submodule "Adafruit_BusIO"]
 	path = Adafruit_BusIO
 	url = https://github.com/adafruit/Adafruit_BusIO.git
+[submodule "mpu6050"]
+	path = mpu6050
+	url = https://github.com/ElectronicCats/mpu6050.git
