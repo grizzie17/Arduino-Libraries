@@ -25,3 +25,9 @@
 [submodule "Adafruit_MPU6050"]
 	path = Adafruit_MPU6050
 	url = https://github.com/adafruit/Adafruit_MPU6050.git
+[submodule "Adafruit_Sensor"]
+	path = Adafruit_Sensor
+	url = https://github.com/adafruit/Adafruit_Sensor.git
+[submodule "Adafruit_BusIO"]
+	path = Adafruit_BusIO
+	url = https://github.com/adafruit/Adafruit_BusIO.git
