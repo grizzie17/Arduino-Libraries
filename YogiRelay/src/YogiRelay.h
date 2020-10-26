@@ -15,10 +15,9 @@
 // controls the various modes of operation.
 //
 // To use the 'confirm' functionality hook
-// the relay pin that is active (normally closed)
-// to the 'confirm' pin.  You may need to
-// put a resistor depending upon the output
-// voltage.
+// the relay pin that is active (normally open)
+// to the 'confirm' pin.  The output voltage
+// must be reduced to 5V or 3.3V.
 
 
 class YogiRelay
@@ -30,17 +29,21 @@ public:
             : m_bSet( false )
             , m_pinSet( 0 )
             , m_pinReset( 0 )
-            , m_pinConfirm( 0 )
+            , m_pinSense( 0 )
+            , m_pinGate( 0 )
     {}
 
-    YogiRelay( uint8_t set,         //! < pin that controls "on"
-            uint8_t    reset = 0,   //! < if using latching relay "off"
-            uint8_t    confirm = 0  //! < extra pin to confirm "set"
+    YogiRelay(                  //
+            uint8_t set,        //! < pin that controls "on"
+            uint8_t reset = 0,  //! < if using latching relay "off"
+            uint8_t sense = 0,  //! < extra pin to confirm "set"
+            uint8_t gate = 0    //! < turn on to allow sensing "set"
             )
             : m_bSet( false )
             , m_pinSet( set )
             , m_pinReset( reset )
-            , m_pinConfirm( confirm )
+            , m_pinSense( sense )
+            , m_pinGate( gate )
     {}
 
 
@@ -48,7 +51,8 @@ public:
     // public functions ---------------
 
     void
-    init( uint8_t set = 0, uint8_t reset = 0, uint8_t confirm = 0 )
+    init( uint8_t set = 0, uint8_t reset = 0, uint8_t confirm = 0,
+            uint8_t gate = 0 )
     {
         if ( 0 < set )
             m_pinSet = set;
@@ -61,10 +65,17 @@ public:
         if ( 0 < m_pinReset )
             pinMode( m_pinReset, OUTPUT );
         if ( 0 < confirm )
-            m_pinConfirm = confirm;
+            m_pinSense = confirm;
+        if ( 0 < gate )
+            m_pinGate = gate;
         // latching with confirm circuit
-        if ( 0 < m_pinConfirm )
-            pinMode( m_pinConfirm, INPUT );
+        if ( 0 < m_pinSense )
+            pinMode( m_pinSense, INPUT );
+        if ( 0 < m_pinGate )
+        {
+            pinMode( m_pinGate, OUTPUT );
+            digitalWrite( m_pinGate, LOW );
+        }
         this->reset();
     }
 
@@ -75,14 +86,14 @@ public:
     {
         m_bSet = true;
         // are we dealing with a latching relay
-        if ( 0 < m_pinReset )
+        if ( 0 < m_pinReset && 0 < m_pinGate )
         {
-            trigger( m_pinSet, LOW );
+            trigger( m_pinSet, HIGH );
         }
         else
         {
             digitalWrite( m_pinSet, HIGH );
-            delay( 400 );
+            delay( 200 );
         }
     }
 
@@ -92,20 +103,32 @@ public:
     reset()
     {
         m_bSet = false;
-        if ( 0 < m_pinReset )
+        if ( 0 < m_pinReset && 0 < m_pinGate )
         {
-            trigger( m_pinReset, HIGH );
+            trigger( m_pinReset, LOW );
         }
         else
         {
             digitalWrite( m_pinSet, LOW );
-            delay( 400 );
+            delay( 200 );
         }
     }
 
     bool
     isSet()
     {
+        bool bResult = m_bSet;
+        if ( 0 < m_pinSense && 0 < m_pinGate )
+        {
+            digitalWrite( m_pinGate, HIGH );
+            delay( 10 );
+            bResult = HIGH == digitalRead( m_pinSense );
+            digitalWrite( m_pinGate, LOW );
+        }
+        else
+        {
+            return m_bSet;
+        }
         return m_bSet;
     }
 
@@ -125,23 +148,26 @@ protected:
     {
         if ( 0 < pin )
         {
-            if ( 0 < m_pinConfirm )
+            if ( 0 < m_pinSense && 0 < m_pinGate )
             {
+                digitalWrite( m_pinGate, HIGH );
                 digitalWrite( pin, HIGH );
                 for ( int i = 1; i < 20; ++i )
                 {
                     delay( 5 );
-                    if ( state == digitalRead( m_pinConfirm ) )
+                    if ( state == digitalRead( m_pinSense ) )
                         break;
                 }
                 digitalWrite( pin, LOW );
+                digitalWrite( m_pinGate, LOW );
             }
             else
             {
-                digitalWrite( m_pinSet, HIGH );
-                delay( 5 );
-                digitalWrite( m_pinSet, LOW );
+                digitalWrite( pin, HIGH );
+                delay( 8 );
+                digitalWrite( pin, LOW );
             }
+            delay( 25 );
         }
     }
 
@@ -150,7 +176,8 @@ protected:
     bool    m_bSet;
     uint8_t m_pinSet;
     uint8_t m_pinReset;
-    uint8_t m_pinConfirm;
+    uint8_t m_pinSense;
+    uint8_t m_pinGate;
 };
 
 

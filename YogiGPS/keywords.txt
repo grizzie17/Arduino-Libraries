@@ -1,0 +1,28 @@
+###################################
+# Syntax Coloring Map For NewPing
+###################################
+
+###################################
+# Datatypes (KEYWORD1)
+###################################
+
+YogiGpsSentence KEYWORD1
+YogiGpsParse KEYWORD1
+
+###################################
+# Methods and Functions (KEYWORD2)
+###################################
+
+# YogiGpsSentence
+
+YogiGpsSentence KEYWORD2
+read KEYWORD2
+sentence KEYWORD2
+clearSentence KEYWORD2
+
+# YogiGpsParse
+
+
+###################################
+# Constants (LITERAL1)
+###################################

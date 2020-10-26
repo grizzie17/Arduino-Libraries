@@ -29,11 +29,16 @@
                 "${env:YOGILIBS}\\YogiDelay\\src",
                 "${env:YOGILIBS}\\YogiGPS\\src",
                 "${env:YOGILIBS}\\YogiPitches\\src",
+                "${env:YOGILIBS}\\YogiRelay\\src",
                 "${env:YOGILIBS}\\YogiSonic\\src",
                 "${env:YOGILIBS}\\YogiSleep\\src",
                 "${env:YOGILIBS}\\Yogi_ADXL345\\src",
                 "${env:SKETCHLIBS}\\rocketscream_LowPower",
                 "${env:SKETCHLIBS}\\SparkFun_ADXL345_Arduino_Library\\src",
+                "${env:SKETCHLIBS}\\mpu6050\\src",
+                "${env:SKETCHLIBS}\\Adafruit_MPU6050",
+                "${env:SKETCHLIBS}\\Adafruit_BusIO",
+                "${env:SKETCHLIBS}\\Adafruit_Sensor",
                 "${env:SKETCHLIBS}\\Adafruit_GPS\\src"
             ],
             "forcedInclude": [

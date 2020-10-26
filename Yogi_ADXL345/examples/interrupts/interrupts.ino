@@ -1,29 +1,101 @@
+#define _DEBUG
+#include <YogiDebug.h>
 
-#include "Yogi_ADXL345.h"
+#include <YogiSleep.h>
+
+#include <ADXL345_setup.h>
 
 
 const uint8_t k_pinINT = 2;
 const uint8_t k_pinLED = LED_BUILTIN;
 
-const byte k_mIntActive = INTERRUPT_ACTIVITY | INTERRUPT_DOUBLE_TAP
-        | INTERRUPT_SINGLE_TAP | INTERRUPT_FREE_FALL;
-const byte k_mIntAll = k_mIntActive | INTERRUPT_INACTIVITY;
-
 
 unsigned long g_uTimeCurrent = 0;
 unsigned long g_uTimePrevious = 0;
+unsigned long g_uTimeInterrupt = 0;
+
+const uint8_t       k_uAdxlDelaySleep = 45;
+const unsigned long k_uDelaySleep = 600 * k_uAdxlDelaySleep;
 
 
-ADXL345 adxl;
-
-
-volatile bool g_bInterrupts = false;
+//================ ADXL =================
 
 void
-interruptHandler()
+adxlAttachInterrupt()
 {
-    g_bInterrupts = true;
+    pinMode( k_pinINT, INPUT );
+    attachInterrupt(
+            digitalPinToInterrupt( k_pinINT ), adxlIntHandler, RISING );
 }
+
+void
+adxlDetachInterrupt()
+{
+    detachInterrupt( digitalPinToInterrupt( k_pinINT ) );
+}
+
+
+void
+adxlDrowsy()
+{
+    g_uCountInterrupt = 0;
+    adxl.setInterruptMask( 0 );
+    adxl.getInterruptSource();  // clear mInterrupts
+
+    adxl.setInterruptMask( k_maskActivity );
+    adxl.setLowPower( true );
+}
+
+
+void
+adxlSleep()
+{
+    adxlDetachInterrupt();
+    g_uCountInterrupt = 0;
+    adxl.getInterruptSource();  // clear mInterrupts
+
+    adxl.setInterruptMask( 0 );
+    adxl.setLowPower( true );
+}
+
+
+void
+adxlWakeup()
+{
+    adxl.setLowPower( false );
+    adxl.setInterruptMask( k_maskAll );
+    g_uCountInterrupt = 0;
+    adxl.getInterruptSource();
+    adxlAttachInterrupt();
+    adxlIntHandler();
+    g_nActivity = 0;
+}
+
+
+//============== SLEEP ===============
+YogiSleep g_tSleep;
+
+void
+enterSleep()
+{
+    DEBUG_PRINTLN( "Sleepy" );
+    DEBUG_DELAY( 300 );
+
+    // don't generate inactivity interrupts during sleep
+    adxlDrowsy();
+
+    g_tSleep.prepareSleep();
+    adxlAttachInterrupt();
+    g_tSleep.sleep();
+    g_tSleep.postSleep();
+
+    // we wakeup here
+    adxlWakeup();
+    DEBUG_PRINTLN( "Wake Up" );
+
+    // ? do we need to reintialize any of the sensors ?
+}
+
 
 void
 setup()
@@ -36,35 +108,15 @@ setup()
 
     Serial.println( "Yogi_ADXL345 setup" );
 
-    adxl.configureI2C();
-
-    adxl.setRange( 2 );
-
-    adxl.setActivityXYZ( true, true, true );
-    adxl.setActivityAc( true );
-    adxl.setActivityThreshold( 16 );
-    adxl.setInactivityXYZ( true, true, true );
-    adxl.setInactivityAc( true );
-    adxl.setInactivityThreshold( 16 );
-
-
-    adxl.setInterrupts( k_mIntAll );
-    adxl.setInterruptMap( k_mIntAll );  // use INT2
-
-    adxl.endConfigure();
-
-    adxl.printAllRegisters();
-
-    g_bInterrupts = false;
-    pinMode( k_pinINT, INPUT );
-    attachInterrupt(
-            digitalPinToInterrupt( k_pinINT ), interruptHandler, RISING );
+    adxlSetup( k_uAdxlDelaySleep );
+    adxlAttachInterrupt();
 
     pinMode( k_pinLED, OUTPUT );
-    digitalWrite( k_pinLED, LOW );
+    digitalWrite( k_pinLED, HIGH );
 
 
     g_uTimePrevious = 0;
+    g_uTimeInterrupt = 0;
 
     Serial.println( "setup complete" );
 }
@@ -73,38 +125,42 @@ setup()
 void
 loop()
 {
-    if ( g_bInterrupts )
+    uint8_t mInterrupts = 0;
+    g_uTimeCurrent = millis();
+    if ( 0 < g_uCountInterrupt )
     {
-        g_bInterrupts = false;
-        byte m = adxl.getInterruptSource();
-        digitalWrite( k_pinLED, HIGH );
-        Serial.print( "Interrupt: " );
-        Serial.println( m, BIN );
-        if ( 0 != ( m & INTERRUPT_INACTIVITY ) )
-        {
-            adxl.setInterrupts( k_mIntActive );
-        }
-        else if ( 0 != ( m & k_mIntActive ) )
-        {
-            adxl.setInterrupts( k_mIntAll );
-        }
-
-        int x, y, z;
-        adxl.readAccel( &x, &y, &z );
-
-        Serial.print( x );
-        Serial.print( "," );
-        Serial.print( y );
-        Serial.print( "," );
-        Serial.println( z );
+        mInterrupts = adxlGetInterrupts();
+        g_uTimeInterrupt = millis();
     }
     else
     {
-        g_uTimeCurrent = millis();
-        if ( 1000 * 3 < abs( g_uTimeCurrent - g_uTimePrevious ) )
+        if ( k_uDelaySleep < g_uTimeCurrent - g_uTimeInterrupt )
         {
-            g_uTimePrevious = g_uTimeCurrent;
-            digitalWrite( k_pinLED, LOW );
+            g_uTimeInterrupt = g_uTimeCurrent;
+            adxl.getInterruptSource();
+            mInterrupts = ADXL_M_INACTIVITY;
+            Serial.println( "Time Delay Sleep" );
         }
+    }
+
+    if ( 0 != mInterrupts )
+    {
+        adxlDataHandler( mInterrupts );
+        if ( 0 != ( mInterrupts & ADXL_M_INACTIVITY ) )
+        {
+            digitalWrite( k_pinLED, LOW );
+            enterSleep();
+
+            // stuff to do when we wake up
+            g_nActivity = 0;
+            digitalWrite( k_pinLED, HIGH );
+        }
+        // else
+        // {
+        //     if ( 200 < g_uTimeCurrent - g_uTimePrevious )
+        //     {
+        //         g_uTimePrevious = g_uTimeCurrent;
+        //     }
+        // }
     }
 }

@@ -35,12 +35,14 @@ adxlStatus( const char* sMessage )
 
 
 void
-adxlSetup( int nSleepDelay )
+adxlSetup( int nSleepDelay, int nSensitivity )
 {
     DEBUG_PRINTLN( "adxlSetup" );
 
     if ( 0 == nSleepDelay )
         nSleepDelay = ADXL_SLEEP_DELAY;
+    if ( 0 == nSensitivity )
+        nSensitivity = ADXL_SENSITIVITY;
 
     adxl.powerOn();  // Power on the ADXL345
     adxlStatus( "adxl.powerOn" );
@@ -67,14 +69,14 @@ adxlSetup( int nSleepDelay )
     adxl.setActivityXYZ( 1, 1, 1 );
     adxlStatus( "adxl.setActivityXYZ" );
     // Set to activate movement detection in the axes "adxl.setActivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
-    adxl.setActivityThreshold( ADXL_SENSITIVITY );
+    adxl.setActivityThreshold( nSensitivity );
     adxlStatus( "adxl.setActivityThreshold" );
     // 62.5mg per increment   // Set activity   // Inactivity thresholds (0-255)
 
     adxl.setInactivityXYZ( 1, 1, 1 );
     adxlStatus( "adxl.setInactivityXYZ" );
     // Set to detect inactivity in all the axes "adxl.setInactivityXYZ(X, Y, Z);" (1 == ON, 0 == OFF)
-    adxl.setInactivityThreshold( ADXL_SENSITIVITY );
+    adxl.setInactivityThreshold( nSensitivity );
     adxlStatus( "adxl.setInactivityThreshold" );
     // 62.5mg per increment
     // Set inactivity
@@ -87,10 +89,10 @@ adxlSetup( int nSleepDelay )
     // Detect taps in the directions turned ON "adxl.setTapDetectionOnX(X, Y, Z);" (1 == ON, 0 == OFF)
 
     // Set values for what is considered a TAP and what is a DOUBLE TAP (0-255)
-    adxl.setTapThreshold( ADXL_SENSITIVITY );  // 62.5 mg per increment
-    adxl.setTapDuration( 15 );                 // 625 μs per increment
-    adxl.setDoubleTapLatency( 80 );            // 1.25 ms per increment
-    adxl.setDoubleTapWindow( 200 );            // 1.25 ms per increment
+    adxl.setTapThreshold( nSensitivity );  // 62.5 mg per increment
+    adxl.setTapDuration( 8 );              // 625 μs per increment
+    adxl.setDoubleTapLatency( 80 );        // 1.25 ms per increment
+    adxl.setDoubleTapWindow( 200 );        // 1.25 ms per increment
 
     // Set values for what is considered FREE FALL (0-255)
     adxl.setFreeFallThreshold( 7 );

@@ -36,7 +36,7 @@ void
 adxlStatus( const char* sMessage );
 
 void
-adxlSetup( int nSleepDelay = 0 );
+adxlSetup( int nSleepDelay = 0, int nSensitivity = 0 );
 
 uint8_t
 adxlGetInterrupts();
